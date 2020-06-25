@@ -23,12 +23,12 @@ setuptools.setup(
         "Operating System :: OS Independent",
         ],
     packages=setuptools.find_packages(),
-    install_requires=['argparse'],
+    install_requires=['argparse', 'pandas', 'easygui'],
     python_requires='>=3.6',
     entry_points={
 
         'console_scripts': [
-            'find_identical_files = fsdc.fsdc:main'
+            'compare_dir = fsdc.fsdc:main'
         ],
         
     }
