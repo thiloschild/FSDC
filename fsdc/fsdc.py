@@ -6,18 +6,14 @@ import pandas as pd
 from pathlib import Path
 
 def convert_bytes(num):
-    """
-    this function will convert bytes to MB.. GB.. etc
-    """
+    #this function will convert bytes to MB.. GB.. etc
     for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
         if num < 1024.0:
             return f'{num:.3f} {x}'
         num /= 1024.0
 
 def file_size(file_path):
-    """
-    this function will return the file size
-    """
+    #this function will return the file size
     if os.path.isfile(file_path):
         file_info = os.stat(file_path)
         return convert_bytes(file_info.st_size)
@@ -45,13 +41,35 @@ def not_unique(df, file):
 	
 	return False
 
-def get_file_list(group_A, group_B):
+def get_files(folder):
 
-	list_of_files = []
-	for roota, dirsa, filesa in os.walk(group_A):
-		list_of_files.append(files)
-	for rootb, dirsb, filesb in os.walk(group_B):
-		..........
+	df = pd.DataFrame(columns=['Filename', 'Path', 'Size'])
+	for root, dirs, file in os.walk(folder):
+		for x in file:
+			size = file_size(os.path.join(root, x))
+			temp_df = pd.DataFrame([[x, root, size]], columns=['Filename', 'Path', 'Size'])
+			df = df.append(temp_df, ignore_index=True)
+
+	return df
+
+def get_unique_files(group_A, group_B):
+
+	dfA = get_files(group_A)
+	dfB = get_files(group_B)
+
+	filesA = dfA['Filename']
+	filesB = dfB['Filename']
+	for x in filesA.values:
+		for y in filesB.values:
+			if x == y:
+				dfA = dfA.drop(dfA[dfA.Filename == x].index)
+				dfB = dfB.drop(dfB[dfB.Filename == y].index)
+
+	return dfA, dfB
+
+
+
+
 
 
 def main():
@@ -116,14 +134,22 @@ def main():
 					if already_in_df(df, temp_df) == False:
 						df = df.append(temp_df, ignore_index=True)
 
-	if no_gui == False:
-		save_path = easygui.filesavebox(default="identical_files_from_")
-		
-	if t_output == False:
-		df.to_excel(save_path+'.xlsx', sheet_name='sheet1')
+	
 
 
 	#unique files
-	dc.
+	a, b = get_unique_files(group_A, group_B)
 
-main()
+
+	#output
+	if no_gui == False:
+			save_path = easygui.filesavebox(default="identical_files_from_")
+	if no_gui == True:
+			save_path = input('Enter the path where you want to save the file')
+
+	if t_output == False:
+
+		with pd.ExcelWriter(save_path+'.xlsx') as writer:
+			df.to_excel(writer, sheet_name='In both')
+			a.to_excel(writer, sheet_name='Only in A')
+			b.to_excel(writer, sheet_name='Only in B')
