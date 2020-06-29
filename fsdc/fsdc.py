@@ -145,8 +145,10 @@ def main():
 	if no_gui == False:
 			save_path = easygui.filesavebox(default="identical_files_from_")
 	if no_gui == True:
-			save_path = input('Enter the path where you want to save the file')
-
+			save_path = input('Enter the path where you want to save the file: ')
+			save_name = input('How do you want to name that file: ')
+			save path = save_path + save_name
+			
 	if t_output == False:
 
 		with pd.ExcelWriter(save_path+'.xlsx') as writer:

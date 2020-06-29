@@ -12,7 +12,7 @@ pip install fsdc
 
 ## Usage
 
-Open a termianl and use the command compare_dir
+Open a terminal and use the command compare_dir
 
 ```bash
 compare_dir

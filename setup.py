@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fsdc",
-    version="0.1.0",
+    version="0.1.1",
     author="Thilo Schild",
     author_email="work@thilo-schild.de",
     description="Finds identical, different and unique files in 2 folders and all subfolders",
