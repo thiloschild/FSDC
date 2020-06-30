@@ -67,27 +67,19 @@ def get_unique_files(group_A, group_B):
 
 	return dfA, dfB
 
+def singelfolder(no_gui, t_output):
+
+	df = pd.DataFrame(columns=['Filename'])
 
 
 
 
-
-def main():
+def comp2folders(no_gui, t_output):
 
 	df = pd.DataFrame(columns=['Filename', 'Identical', 'Path in Group A',
 							   'Size in Group A','Path in Group B', 
 							   'Size in Group B'])
-	
-	ap = argparse.ArgumentParser()
-	ap.add_argument("-i", "--no_gui", action="store_true", required=False,
-					help="input from the terminal (default easygui)")
-	ap.add_argument("-t", "--terminal_output", action="store_true", required=False,
-					help="output in the terminal (default excel)")
-	args = vars(ap.parse_args())
-	
-	no_gui = args['no_gui']
-	t_output = args['terminal_output']
-	
+
 	if no_gui == False:
 		group_A = easygui.diropenbox()
 		print(group_A)
@@ -135,8 +127,6 @@ def main():
 						df = df.append(temp_df, ignore_index=True)
 
 	
-
-
 	#unique files
 	a, b = get_unique_files(group_A, group_B)
 
@@ -155,3 +145,28 @@ def main():
 			df.to_excel(writer, sheet_name='In both')
 			a.to_excel(writer, sheet_name='Only in A')
 			b.to_excel(writer, sheet_name='Only in B')
+
+
+
+def main():
+	
+	ap = argparse.ArgumentParser()
+	ap.add_argument("-i", "--no_gui", action="store_true", required=False,
+					help="input from the terminal (default easygui)")
+	ap.add_argument("-t", "--terminal_output", action="store_true", required=False,
+					help="output in the terminal (default excel)")
+	ap.add_argument("-s", "--singel_input", action="store_true", required=False,
+					help="checks one folder and its subfolders for identical files")
+	args = vars(ap.parse_args())
+	
+	no_gui = args['no_gui']
+	t_output = args['terminal_output']
+	s_input = args['singel_input']
+
+	if s_input == False:
+
+		comp2folders(no_gui, t_output)
+
+	if s_input == True:
+
+		singelfolder()
