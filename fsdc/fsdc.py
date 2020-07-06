@@ -4,7 +4,6 @@ import argparse
 import easygui
 import pandas as pd
 from pathlib import Path
-from tkinter import filedialog
 
 def convert_bytes(num):
     #this function will convert bytes to MB.. GB.. etc
@@ -68,22 +67,20 @@ def get_unique_files(group_A, group_B):
 
 	return dfA, dfB
 
-def main():
+def singelfolder(no_gui, t_output):
+
+	df = pd.DataFrame(columns=['Filename'])
+	#continue here!!
+
+
+
+
+def comp2folders(no_gui, t_output):
 
 	df = pd.DataFrame(columns=['Filename', 'Identical', 'Path in Group A',
 							   'Size in Group A','Path in Group B', 
 							   'Size in Group B'])
-	
-	ap = argparse.ArgumentParser()
-	ap.add_argument("-i", "--no_gui", action="store_true", required=False,
-					help="input from the terminal (default easygui)")
-	ap.add_argument("-t", "--terminal_output", action="store_true", required=False,
-					help="output in the terminal (default excel)")
-	args = vars(ap.parse_args())
-	
-	no_gui = args['no_gui']
-	t_output = args['terminal_output']
-	
+
 	if no_gui == False:
 		group_A = easygui.diropenbox()
 		print(group_A)
@@ -130,8 +127,10 @@ def main():
 					if already_in_df(df, temp_df) == False:
 						df = df.append(temp_df, ignore_index=True)
 
+	
 	#unique files
 	a, b = get_unique_files(group_A, group_B)
+
 
 	#output
 	if no_gui == False:
@@ -139,8 +138,8 @@ def main():
 	if no_gui == True:
 			save_path = input('Enter the path where you want to save the file: ')
 			save_name = input('How do you want to name that file: ')
-			save_path = save_path +'/'+ save_name
-
+			save path = save_path + save_name
+			
 	if t_output == False:
 
 		with pd.ExcelWriter(save_path+'.xlsx') as writer:
@@ -149,4 +148,26 @@ def main():
 			b.to_excel(writer, sheet_name='Only in B')
 
 
-main()
+
+def main():
+	
+	ap = argparse.ArgumentParser()
+	ap.add_argument("-i", "--no_gui", action="store_true", required=False,
+					help="input from the terminal (default easygui)")
+	ap.add_argument("-t", "--terminal_output", action="store_true", required=False,
+					help="output in the terminal (default excel)")
+	ap.add_argument("-s", "--singel_input", action="store_true", required=False,
+					help="checks one folder and its subfolders for identical files")
+	args = vars(ap.parse_args())
+	
+	no_gui = args['no_gui']
+	t_output = args['terminal_output']
+	s_input = args['singel_input']
+
+	if s_input == False:
+
+		comp2folders(no_gui, t_output)
+
+	if s_input == True:
+
+		singelfolder()
