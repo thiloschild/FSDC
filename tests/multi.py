@@ -4,7 +4,19 @@ import argparse
 import easygui
 import pandas as pd
 from pathlib import Path
-from tkinter import filedialog
+import sys
+from PyQt5.QtWidgets import (QFileDialog, QAbstractItemView, QListView,
+                             QTreeView, QApplication, QDialog)
+
+
+class getExistingDirectories(QFileDialog):
+    def __init__(self, *args):
+        super(getExistingDirectories, self).__init__(*args)
+        self.setOption(self.DontUseNativeDialog, True)
+        self.setFileMode(self.Directory)
+        self.setOption(self.ShowDirsOnly, True)
+        self.findChildren(QListView)[0].setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.findChildren(QTreeView)[0].setSelectionMode(QAbstractItemView.ExtendedSelection)
 
 def convert_bytes(num):
     #this function will convert bytes to MB.. GB.. etc
@@ -85,50 +97,58 @@ def main():
 	t_output = args['terminal_output']
 	
 	if no_gui == False:
-		group_A = easygui.diropenbox()
-		print(group_A)
-		group_B = easygui.diropenbox()
-		print(group_B)
+		qappA = QApplication(sys.argv)
+		dlgA = getExistingDirectories()
+		if dlgA.exec_() == QDialog.Accepted:
+			list_of_folders_A = dlgA.selectedFiles()
+
+		qappB = QApplication(sys.argv)
+		dlgB = getExistingDirectories()
+		if dlgB.exec_() == QDialog.Accepted:
+			list_of_folders_B = dlgB.selectedFiles()
+
 	
 	else:
 		group_A = input('Give the path of the first foldergroup: ')
 		group_B = input('Give the path of the second foldergroup: ')
 	
-	for roota, dirsa, filesa in os.walk(group_A):
-		for rootb, dirsb, filesb in os.walk(group_B):
-			dc = dircmp(roota, rootb)
-			if dc.same_files == []:
-				pass
-			else:
-	
-				if t_output == True:
-					print('###################################')
-					print('Same File found in : '+roota+' and '+rootb)
-					print(dc.same_files)
-				for f in dc.same_files:
-					sizea = file_size(os.path.join(roota, f))
-					sizeb = file_size(os.path.join(rootb, f))
-					temp_df = pd.DataFrame([[f, 'yes', roota, sizea, rootb, sizeb]], columns=['Filename', 'Identical', 'Path in Group A', 
-																					   'Size in Group A','Path in Group B', 
-																					   'Size in Group B'])
-					df = df.append(temp_df, ignore_index=True)
-
-			if dc.common_files == []:
-				pass
-			else:
-
-				if t_output == True:
-					print('###################################')
-					print('Same File found in : '+roota+' and '+rootb)
-					print(dc.common_files)
-				for f in dc.common_files:
-					sizea = file_size(os.path.join(roota, f))
-					sizeb = file_size(os.path.join(rootb, f))
-					temp_df = pd.DataFrame([[f, 'no', roota, sizea, rootb, sizeb]], columns=['Filename', 'Identical', 'Path in Group A', 
-																					   'Size in Group A','Path in Group B', 
-																					   'Size in Group B'])
-					if already_in_df(df, temp_df) == False:
-						df = df.append(temp_df, ignore_index=True)
+	for group_A in list_of_folders_A:
+		for roota, dirsa, filesa in os.walk(group_A):
+			for group_B in list_of_folders_B:
+				for rootb, dirsb, filesb in os.walk(group_B):
+					dc = dircmp(roota, rootb)
+					if dc.same_files == []:
+						pass
+					else:
+			
+						if t_output == True:
+							print('###################################')
+							print('Same File found in : '+roota+' and '+rootb)
+							print(dc.same_files)
+						for f in dc.same_files:
+							sizea = file_size(os.path.join(roota, f))
+							sizeb = file_size(os.path.join(rootb, f))
+							temp_df = pd.DataFrame([[f, 'yes', roota, sizea, rootb, sizeb]], columns=['Filename', 'Identical', 'Path in Group A', 
+																							   'Size in Group A','Path in Group B', 
+																							   'Size in Group B'])
+							df = df.append(temp_df, ignore_index=True)
+		
+					if dc.common_files == []:
+						pass
+					else:
+		
+						if t_output == True:
+							print('###################################')
+							print('Same File found in : '+roota+' and '+rootb)
+							print(dc.common_files)
+						for f in dc.common_files:
+							sizea = file_size(os.path.join(roota, f))
+							sizeb = file_size(os.path.join(rootb, f))
+							temp_df = pd.DataFrame([[f, 'no', roota, sizea, rootb, sizeb]], columns=['Filename', 'Identical', 'Path in Group A', 
+																							   'Size in Group A','Path in Group B', 
+																							   'Size in Group B'])
+							if already_in_df(df, temp_df) == False:
+								df = df.append(temp_df, ignore_index=True)
 
 	#unique files
 	a, b = get_unique_files(group_A, group_B)
