@@ -5,17 +5,11 @@ import easygui
 import pandas as pd
 from pathlib import Path
 import sys
-from PyQt5.QtWidgets import (QFileDialog, QAbstractItemView, QListView,
-                             QTreeView, QApplication, QDialog)
+import re
 
-class getExistingDirectories(QFileDialog):
-    def __init__(self, *args):
-        super(getExistingDirectories, self).__init__(*args)
-        self.setOption(self.DontUseNativeDialog, True)
-        self.setFileMode(self.Directory)
-        self.setOption(self.ShowDirsOnly, True)
-        self.findChildren(QListView)[0].setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.findChildren(QTreeView)[0].setSelectionMode(QAbstractItemView.ExtendedSelection)
+import wx
+import wx.lib.agw.multidirdialog as MDD
+
 
 def convert_bytes(num):
     #this function will convert bytes to MB.. GB.. etc
@@ -89,6 +83,30 @@ def get_unique_files(list_of_folders_A, list_of_folders_B):
 
 	return dfA, dfB
 
+def get_folders():
+
+	app = wx.App(0)
+	dlg = MDD.MultiDirDialog(None, title="Custom MultiDirDialog", defaultPath=os.getcwd(),
+								agwStyle=MDD.DD_MULTIPLE|MDD.DD_DIR_MUST_EXIST)
+
+	if dlg.ShowModal() != wx.ID_OK:
+		print("You Cancelled The Dialog!")
+		dlg.Destroy()
+
+	paths = dlg.GetPaths()
+	list_of_paths = []
+
+	for indx, path in enumerate(paths):
+		drive = re.findall(r"(\w:)", path)
+		path_split = path.split("\\", 1)
+		path = drive[0]+"\\"+path_split[1]
+		list_of_paths.append(path)
+
+	dlg.Destroy()
+	app.MainLoop()
+
+	return list_of_paths
+
 def main():
 
 	df = pd.DataFrame(columns=['Filename', 'Identical', 'Path in Group A',
@@ -96,30 +114,32 @@ def main():
 							   'Size in Group B'])
 	
 	ap = argparse.ArgumentParser()
-	ap.add_argument("-i", "--no_gui", action="store_true", required=False,
-					help="input from the terminal (default easygui)")
+	ap.add_argument("-i", "--enable_gui", action="store_false", required=False,
+					help="Input with easygui (you can only select one folder)")
 	ap.add_argument("-t", "--terminal_output", action="store_true", required=False,
-					help="output in the terminal (default excel)")
+					help="Output in the terminal (default excel). There will be no file you can save.")
 	args = vars(ap.parse_args())
 	
-	no_gui = args['no_gui']
+	enable_gui = args['enable_gui']
 	t_output = args['terminal_output']
 	
-	if no_gui == False:
-		qappA = QApplication(sys.argv)
-		dlgA = getExistingDirectories()
-		if dlgA.exec_() == QDialog.Accepted:
-			list_of_folders_A = dlgA.selectedFiles()
+	list_of_folders_A = []
+	list_of_folders_B = []
 
-		qappB = QApplication(sys.argv)
-		dlgB = getExistingDirectories()
-		if dlgB.exec_() == QDialog.Accepted:
-			list_of_folders_B = dlgB.selectedFiles()
+
+	if enable_gui == False:
+
+		list_of_folders_A = get_folders()
+		list_of_folders_B = get_folders()
 	
 	else:
-		list_of_folders_A = input('Give the path of the first foldergroup: ')
-		list_of_folders_B = input('Give the path of the second foldergroup: ')
+		list_of_folders_A = list(map(str, input('Give the path of the first foldergroup (you can input multiple paths): ').split()))
+
+		list_of_folders_B = list(map(str, input('Give the path of the second foldergroup (you can input multiple paths): ').split()))
 	
+	print(list_of_folders_A)
+	print(list_of_folders_B)
+
 	for group_A in list_of_folders_A:
 		for roota, dirsa, filesa in os.walk(group_A):
 			for group_B in list_of_folders_B:
@@ -128,11 +148,6 @@ def main():
 					if dc.same_files == []:
 						pass
 					else:
-			
-						if t_output == True:
-							print('###################################')
-							print('Same File found in : '+roota+' and '+rootb)
-							print(dc.same_files)
 
 						for f in dc.same_files:
 							sizea = file_size(os.path.join(roota, f))
@@ -145,11 +160,7 @@ def main():
 					if dc.common_files == []:
 						pass
 					else:
-		
-						if t_output == True:
-							print('###################################')
-							print('Same File found in : '+roota+' and '+rootb)
-							print(dc.common_files)
+
 						for f in dc.common_files:
 							sizea = file_size(os.path.join(roota, f))
 							sizeb = file_size(os.path.join(rootb, f))
@@ -163,16 +174,33 @@ def main():
 	a, b = get_unique_files(list_of_folders_A, list_of_folders_B)
 
 	#output
-	if no_gui == False:
-			save_path = easygui.filesavebox(default="identical_files_from_")
-	if no_gui == True:
-			save_path = input('Enter the path where you want to save the file: ')
-			save_name = input('How do you want to name that file: ')
-			save_path = save_path +'/'+ save_name +'.xlsx'
+
+
+	if t_output == True:
+
+		print("common files:")
+		print(df)
+		print("##################################")
+		print("Files unique to the first group")
+		print(a)
+		print("##################################")
+		print("files unique to the second group")
+		print(b)
 
 	if t_output == False:
+
+		if enable_gui == False:
+				save_path = easygui.filesavebox(default="identical_files_from_")
+		if enable_gui == True:
+				save_path = input('Enter the path where you want to save the file: ')
+				save_name = input('How do you want to name that file: ')
+				save_path = save_path +'/'+ save_name +'.xlsx'
 
 		with pd.ExcelWriter(save_path+'.xlsx') as writer:
 			df.to_excel(writer, sheet_name='In both')
 			a.to_excel(writer, sheet_name='Only in A')
 			b.to_excel(writer, sheet_name='Only in B')
+
+
+if __name__ == "__main__":
+	main()
