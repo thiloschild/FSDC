@@ -4,19 +4,6 @@ import argparse
 import easygui
 import pandas as pd
 from pathlib import Path
-import sys
-from PyQt5.QtWidgets import (QFileDialog, QAbstractItemView, QListView,
-                             QTreeView, QApplication, QDialog)
-
-
-class getExistingDirectories(QFileDialog):
-    def __init__(self, *args):
-        super(getExistingDirectories, self).__init__(*args)
-        self.setOption(self.DontUseNativeDialog, True)
-        self.setFileMode(self.Directory)
-        self.setOption(self.ShowDirsOnly, True)
-        self.findChildren(QListView)[0].setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.findChildren(QTreeView)[0].setSelectionMode(QAbstractItemView.ExtendedSelection)
 
 def convert_bytes(num):
     #this function will convert bytes to MB.. GB.. etc
@@ -80,78 +67,70 @@ def get_unique_files(group_A, group_B):
 
 	return dfA, dfB
 
-def main():
+def singelfolder(no_gui, t_output):
+
+	df = pd.DataFrame(columns=['Filename'])
+	#continue here!!
+
+
+
+
+def comp2folders(no_gui, t_output):
 
 	df = pd.DataFrame(columns=['Filename', 'Identical', 'Path in Group A',
 							   'Size in Group A','Path in Group B', 
 							   'Size in Group B'])
-	
-	ap = argparse.ArgumentParser()
-	ap.add_argument("-i", "--no_gui", action="store_true", required=False,
-					help="input from the terminal (default easygui)")
-	ap.add_argument("-t", "--terminal_output", action="store_true", required=False,
-					help="output in the terminal (default excel)")
-	args = vars(ap.parse_args())
-	
-	no_gui = args['no_gui']
-	t_output = args['terminal_output']
-	
+
 	if no_gui == False:
-		qappA = QApplication(sys.argv)
-		dlgA = getExistingDirectories()
-		if dlgA.exec_() == QDialog.Accepted:
-			list_of_folders_A = dlgA.selectedFiles()
-
-		qappB = QApplication(sys.argv)
-		dlgB = getExistingDirectories()
-		if dlgB.exec_() == QDialog.Accepted:
-			list_of_folders_B = dlgB.selectedFiles()
-
+		group_A = easygui.diropenbox()
+		print(group_A)
+		group_B = easygui.diropenbox()
+		print(group_B)
 	
 	else:
 		group_A = input('Give the path of the first foldergroup: ')
 		group_B = input('Give the path of the second foldergroup: ')
 	
-	for group_A in list_of_folders_A:
-		for roota, dirsa, filesa in os.walk(group_A):
-			for group_B in list_of_folders_B:
-				for rootb, dirsb, filesb in os.walk(group_B):
-					dc = dircmp(roota, rootb)
-					if dc.same_files == []:
-						pass
-					else:
-			
-						if t_output == True:
-							print('###################################')
-							print('Same File found in : '+roota+' and '+rootb)
-							print(dc.same_files)
-						for f in dc.same_files:
-							sizea = file_size(os.path.join(roota, f))
-							sizeb = file_size(os.path.join(rootb, f))
-							temp_df = pd.DataFrame([[f, 'yes', roota, sizea, rootb, sizeb]], columns=['Filename', 'Identical', 'Path in Group A', 
-																							   'Size in Group A','Path in Group B', 
-																							   'Size in Group B'])
-							df = df.append(temp_df, ignore_index=True)
-		
-					if dc.common_files == []:
-						pass
-					else:
-		
-						if t_output == True:
-							print('###################################')
-							print('Same File found in : '+roota+' and '+rootb)
-							print(dc.common_files)
-						for f in dc.common_files:
-							sizea = file_size(os.path.join(roota, f))
-							sizeb = file_size(os.path.join(rootb, f))
-							temp_df = pd.DataFrame([[f, 'no', roota, sizea, rootb, sizeb]], columns=['Filename', 'Identical', 'Path in Group A', 
-																							   'Size in Group A','Path in Group B', 
-																							   'Size in Group B'])
-							if already_in_df(df, temp_df) == False:
-								df = df.append(temp_df, ignore_index=True)
+	for roota, dirsa, filesa in os.walk(group_A):
+		for rootb, dirsb, filesb in os.walk(group_B):
+			dc = dircmp(roota, rootb)
+			if dc.same_files == []:
+				pass
+			else:
+	
+				if t_output == True:
+					print('###################################')
+					print('Same File found in : '+roota+' and '+rootb)
+					print(dc.same_files)
+				for f in dc.same_files:
+					sizea = file_size(os.path.join(roota, f))
+					sizeb = file_size(os.path.join(rootb, f))
+					temp_df = pd.DataFrame([[f, 'yes', roota, sizea, rootb, sizeb]], columns=['Filename', 'Identical', 'Path in Group A', 
+																					   'Size in Group A','Path in Group B', 
+																					   'Size in Group B'])
+					df = df.append(temp_df, ignore_index=True)
 
+			if dc.common_files == []:
+				pass
+			else:
+
+				if t_output == True:
+					print('###################################')
+					print('Same File found in : '+roota+' and '+rootb)
+					print(dc.common_files)
+				for f in dc.common_files:
+					sizea = file_size(os.path.join(roota, f))
+					sizeb = file_size(os.path.join(rootb, f))
+					temp_df = pd.DataFrame([[f, 'no', roota, sizea, rootb, sizeb]], columns=['Filename', 'Identical', 'Path in Group A', 
+																					   'Size in Group A','Path in Group B', 
+																					   'Size in Group B'])
+					if already_in_df(df, temp_df) == False:
+						df = df.append(temp_df, ignore_index=True)
+
+	
 	#unique files
 	a, b = get_unique_files(group_A, group_B)
+
 
 	#output
 	if no_gui == False:
@@ -159,8 +138,8 @@ def main():
 	if no_gui == True:
 			save_path = input('Enter the path where you want to save the file: ')
 			save_name = input('How do you want to name that file: ')
-			save_path = save_path +'/'+ save_name
-
+			save path = save_path + save_name
+			
 	if t_output == False:
 
 		with pd.ExcelWriter(save_path+'.xlsx') as writer:
@@ -169,4 +148,26 @@ def main():
 			b.to_excel(writer, sheet_name='Only in B')
 
 
-main()
+
+def main():
+	
+	ap = argparse.ArgumentParser()
+	ap.add_argument("-i", "--no_gui", action="store_true", required=False,
+					help="input from the terminal (default easygui)")
+	ap.add_argument("-t", "--terminal_output", action="store_true", required=False,
+					help="output in the terminal (default excel)")
+	ap.add_argument("-s", "--singel_input", action="store_true", required=False,
+					help="checks one folder and its subfolders for identical files")
+	args = vars(ap.parse_args())
+	
+	no_gui = args['no_gui']
+	t_output = args['terminal_output']
+	s_input = args['singel_input']
+
+	if s_input == False:
+
+		comp2folders(no_gui, t_output)
+
+	if s_input == True:
+
+		singelfolder()

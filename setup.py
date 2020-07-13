@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fsdc",
-    version="0.1.3",
+    version="0.1.4",
     author="Thilo Schild",
     author_email="work@thilo-schild.de",
     description="Finds identical, different and unique files in 2 folders and all subfolders",
@@ -23,7 +23,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         ],
     packages=setuptools.find_packages(),
-    install_requires=['argparse', 'pandas', 'easygui'],
+    install_requires=['argparse', 'pandas', 'sys', 'PyQt5', 'easygui', 'pathlib'],
     python_requires='>=3.6',
     entry_points={
 
